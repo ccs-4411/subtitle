@@ -41,8 +41,17 @@ SDK 務必選擇 Gradio，硬體選擇 CPU Basic (免費規格)。
 
 app.py：貼入本專案的網頁版原始碼。
 
+1. 大檔案上傳限制
+由於網頁版需要透過網路將檔案上傳至雲端伺服器，若直接上傳接近 1 GB 左右的大影片檔，極易因為家中的網路「上傳頻寬」不足，導致瀏覽器發生連線逾時錯誤（Timeout / Upload Error）。
+
+💡 最佳解決方案：
+AI 抽字幕只需要「音訊」。建議在上傳大影片前，先在本地端使用 FFmpeg 等工具將影片秒轉為純音訊（如 .mp3 或 .wav）。
+一部 1 GB 的影片轉為 MP3 後通常僅剩 20 MB ~ 40 MB，丟上網頁可秒速傳完且保證不報錯，辨識出來的字幕品質完全不打折。
+
+
 requirements.txt：填入依賴套件。
 
 儲存後等待 1~2 分鐘建立（Building）完成，狀態變為 Running 即可上線使用。
 
 💡 小撇步：Hugging Face 免費版具備快取功能，首次熱機載入 Whisper 模型後，未來網站重啟/喚醒皆能秒級讀取模型，體驗極佳。
+ffmpeg -i "video.mp4" -vn -acodec libmp3lame -ar 16000 -ac 1 "upload.mp3"
