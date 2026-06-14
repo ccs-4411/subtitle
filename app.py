@@ -5,8 +5,8 @@ import gradio as gr
 from faster_whisper import WhisperModel
 
 # 初始化 Whisper 模型（在伺服器端載入）
-# 部署到雲端免費平台時，建議先用 base 或 tiny 模型避免記憶體溢出 (OOM)
-MODEL = WhisperModel("base", compute_type="int8")
+# device="cpu" 確保在 Hugging Face Spaces 免費版硬體上穩定執行
+MODEL = WhisperModel("base", device="cpu", compute_type="int8")
 
 def format_time(s):
     h = int(s // 3600)
@@ -25,7 +25,7 @@ def save_srt(segments, path):
 
 def process_videos(video_files, selected_lang, progress=gr.Progress()):
     if not video_files:
-        return "請至少上傳一個影片檔案。", None
+        return "請至少上傳一個影片或音訊檔案。", None
 
     # 建立臨時工作目錄
     output_dir = "whisper_outputs"
@@ -46,8 +46,7 @@ def process_videos(video_files, selected_lang, progress=gr.Progress()):
         # 更新網頁進度條 (Gradio 內建功能，會即時顯示在網頁上)
         progress(idx / total_files, desc=f"正在處理 ({idx+1}/{total_files}): {base_name}")
 
-        # 備註：Faster-Whisper 其實可以直接吃影片檔，不一定要用 FFmpeg 抽成 wav
-        # 在網頁端直接輸入影片路徑更穩定
+        # Faster-Whisper 直接讀取上傳的影片/音訊檔案
         if selected_lang == "auto":
             segments, _ = MODEL.transcribe(video_path)
         else:
@@ -65,17 +64,18 @@ def process_videos(video_files, selected_lang, progress=gr.Progress()):
     return f"成功處理完成 {total_files} 個檔案！", zip_path
 
 # 建立 Web UI 介面
-with gr.Blocks(title="Whisper 批次字幕工具網頁版", theme=gr.themes.Soft()) as demo:
+with gr.Blocks(title="Whisper 批次字幕工具網頁版") as demo:
     gr.Markdown("# 🎬 Whisper 批次字幕工具網頁版")
-    gr.Markdown("上傳影片，AI 將自動為您抽取並生成 SRT 字幕檔案。")
+    gr.Markdown("上傳影片或純音訊檔，AI 將自動為您抽取並生成 SRT 字幕檔案。")
     
     with gr.Row():
         with gr.Column():
-            # 檔案上傳組件 (支援多檔案、拖曳)
+            # 檔案上傳組件 (支援多檔案、拖曳，並限定影片與音訊格式)
             file_input = gr.File(
-                label="請上傳影片 (可多選拖曳)", 
+                label="請上傳影片/音訊 (可多選拖曳)", 
                 file_count="multiple", 
-                type="filepath"
+                type="filepath",
+                file_types=["video", "audio"]
             )
             
             # 語言選擇單選鈕
@@ -108,5 +108,5 @@ with gr.Blocks(title="Whisper 批次字幕工具網頁版", theme=gr.themes.Soft
     )
 
 if __name__ == "__main__":
-    # 本地測試時執行這個檔案，會自動打開 http://127.0.0.1:7860 網頁
-    demo.launch()
+    # server_name="0.0.0.0" 允許雲端外網連入，並將主題載入移至 launch 中
+    demo.launch(server_name="0.0.0.0", theme=gr.themes.Soft())
