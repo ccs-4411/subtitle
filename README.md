@@ -34,7 +34,7 @@ python app.py
 🚀 雲端部署指南 (Cloud Deployment)
 🥇 推薦：Hugging Face Spaces (全免費)
 前往 Hugging Face Spaces 建立一個新的 Space。
-
+網址:https://huggingface.co/spaces/tiger0325/title
 SDK 務必選擇 Gradio，硬體選擇 CPU Basic (免費規格)。
 
 透過網頁上的 Add file 功能，直接建立：
